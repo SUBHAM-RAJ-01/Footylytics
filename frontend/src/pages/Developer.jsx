@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiGithub, FiLinkedin, FiMail, FiCode, FiHeart, FiCoffee, FiExternalLink, FiCalendar } from 'react-icons/fi';
+import { FiGithub, FiLinkedin, FiMail, FiCode, FiHeart, FiCoffee, FiExternalLink, FiCalendar, FiBell } from 'react-icons/fi';
+import NotificationTester from '../components/NotificationTester';
 
 export default function Developer() {
+  const [showNotificationTester, setShowNotificationTester] = useState(false);
   const lastUpdated = new Date('2025-10-03'); // Update this date when you make changes
   const version = 'v1.4.1';
 
@@ -292,6 +295,28 @@ export default function Developer() {
             </motion.div>
           ))}
         </div>
+      </motion.div>
+
+      {/* Notification Tester */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+        className="bg-white dark:bg-slate-800 rounded-2xl p-6 border-2 border-blue-100 dark:border-blue-900 shadow-lg"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <FiBell className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <h3 className="text-2xl font-bold">PWA Notification Tester</h3>
+          </div>
+          <button
+            onClick={() => setShowNotificationTester(!showNotificationTester)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            {showNotificationTester ? 'Hide' : 'Show'} Tester
+          </button>
+        </div>
+        {showNotificationTester && <NotificationTester />}
       </motion.div>
 
       {/* Copyright & Support */}

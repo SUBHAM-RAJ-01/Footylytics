@@ -8,7 +8,7 @@ import { getAvatarForEmail, getAvatarColor } from '../utils/avatars';
 import SubscriptionReminder from '../components/SubscriptionReminder';
 
 export default function Settings() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, refreshProfile } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [notifications, setNotifications] = useState({
     matchStart: true,
@@ -17,6 +17,13 @@ export default function Settings() {
   });
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [daysRemaining, setDaysRemaining] = useState(null);
+
+  // Refresh profile when component mounts
+  useEffect(() => {
+    if (refreshProfile && user) {
+      refreshProfile();
+    }
+  }, [refreshProfile, user]);
 
   // Calculate days remaining on subscription
   useEffect(() => {
@@ -65,6 +72,12 @@ export default function Settings() {
   const handleSignOut = async () => {
     if (confirm('Are you sure you want to sign out?')) {
       await signOut();
+    }
+  };
+
+  const handleRefreshProfile = async () => {
+    if (refreshProfile) {
+      await refreshProfile();
     }
   };
 
@@ -255,11 +268,20 @@ export default function Settings() {
                 <p className="font-medium">{profile?.is_premium ? 'Premium' : 'Free'}</p>
               </div>
             </div>
-            {profile?.is_premium && (
-              <button className="text-sm text-blue-600 dark:text-emerald-400 hover:underline">
-                Manage
+            <div className="flex items-center space-x-2">
+              {profile?.is_premium && (
+                <button className="text-sm text-blue-600 dark:text-emerald-400 hover:underline">
+                  Manage
+                </button>
+              )}
+              <button 
+                onClick={handleRefreshProfile}
+                className="text-sm text-gray-600 dark:text-gray-400 hover:underline"
+                title="Refresh account status"
+              >
+                Refresh
               </button>
-            )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between py-3">
@@ -351,9 +373,9 @@ export default function Settings() {
         <div className="space-y-4">
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="w-full flex items-center justify-center space-x-2 px-3 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
           >
-            <FiLogOut />
+            <FiLogOut className="w-4 h-4" />
             <span>Sign Out</span>
           </button>
         </div>

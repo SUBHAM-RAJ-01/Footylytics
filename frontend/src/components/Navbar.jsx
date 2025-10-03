@@ -19,7 +19,7 @@ import { format } from "date-fns";
 
 export default function Navbar({ onMenuClick }) {
   const { theme, toggleTheme } = useTheme();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -32,10 +32,14 @@ export default function Navbar({ onMenuClick }) {
   useEffect(() => {
     if (user) {
       fetchNotifications();
+      // Refresh profile to ensure premium status is up to date
+      if (refreshProfile) {
+        refreshProfile();
+      }
     } else {
       setNotifications([]);
     }
-  }, [user]);
+  }, [user, refreshProfile]);
 
   // PWA Install Prompt
   useEffect(() => {
@@ -230,8 +234,15 @@ export default function Navbar({ onMenuClick }) {
             </Link>
 
             <div className="flex items-center space-x-4">
+              {/* Debug info - remove in production */}
+              {process.env.NODE_ENV === 'development' && user && (
+                <div className="text-xs text-gray-500 hidden lg:block">
+                  Premium: {profile?.is_premium ? 'Yes' : 'No'} | Profile: {profile ? 'Loaded' : 'Loading...'}
+                </div>
+              )}
+              
               {/* Show upgrade button for non-premium users or guests */}
-              {!profile?.is_premium && (
+              {user && !profile?.is_premium && (
                 <Link
                   to="/pricing"
                   className="hidden md:flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg font-medium hover:opacity-90 shadow-lg hover:shadow-xl transition-all"
@@ -242,7 +253,7 @@ export default function Navbar({ onMenuClick }) {
               )}
 
               {/* Show premium badge for premium users */}
-              {profile?.is_premium && (
+              {user && profile?.is_premium && (
                 <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg font-medium">
                   <FiAward className="w-4 h-4" />
                   <span>Premium</span>

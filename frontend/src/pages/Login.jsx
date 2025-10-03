@@ -92,7 +92,10 @@ export default function Login() {
       setError(error.message);
       setLoading(false);
     } else {
-      navigate('/');
+      // Add a small delay to ensure auth state is updated
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
     }
   };
 

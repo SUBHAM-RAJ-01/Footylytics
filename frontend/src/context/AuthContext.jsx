@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { logAuthState } from '../utils/authDebug';
 
 // Check if Supabase credentials are available
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -30,18 +31,28 @@ export function AuthProvider({ children }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
       }
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email);
+      
       setSession(session);
       setUser(session?.user ?? null);
+      
       if (session?.user) {
         await fetchProfile(session.user.id);
       } else {
+        // Clear all user-related state on sign out
         setProfile(null);
+        // Clear any cached data
+        localStorage.removeItem('user_profile');
       }
+      
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -50,6 +61,8 @@ export function AuthProvider({ children }) {
   const fetchProfile = async (userId) => {
     if (!supabase) return;
     try {
+      console.log('Fetching profile for user:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -58,17 +71,31 @@ export function AuthProvider({ children }) {
       
       if (error && error.code === 'PGRST116') {
         // Profile doesn't exist, create it
-        const { data: newProfile } = await supabase
+        console.log('Creating new profile for user:', userId);
+        const { data: newProfile, error: insertError } = await supabase
           .from('profiles')
           .insert([{ id: userId, is_premium: false }])
           .select()
           .single();
+          
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+          return;
+        }
+        
+        console.log('New profile created:', newProfile);
         setProfile(newProfile);
+        localStorage.setItem('user_profile', JSON.stringify(newProfile));
+      } else if (error) {
+        console.error('Error fetching profile:', error);
       } else {
+        console.log('Profile fetched:', data);
         setProfile(data);
+        localStorage.setItem('user_profile', JSON.stringify(data));
+        logAuthState(user, data, 'Profile Fetched');
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error in fetchProfile:', error);
     }
   };
 
@@ -105,7 +132,34 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     if (!supabase) return;
-    await supabase.auth.signOut();
+    
+    try {
+      console.log('Signing out user...');
+      
+      // Clear local state first
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      
+      // Clear localStorage
+      localStorage.removeItem('user_profile');
+      localStorage.removeItem('supabase.auth.token');
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Error signing out:', error);
+      } else {
+        console.log('Successfully signed out');
+      }
+      
+      // Force reload to clear any cached state
+      window.location.href = '/';
+      
+    } catch (error) {
+      console.error('Error in signOut:', error);
+    }
   };
 
   const signInWithOAuth = async (provider) => {
@@ -123,6 +177,12 @@ export function AuthProvider({ children }) {
     return { error };
   };
 
+  const refreshProfile = async () => {
+    if (user?.id) {
+      await fetchProfile(user.id);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user,
@@ -134,7 +194,8 @@ export function AuthProvider({ children }) {
       resetPassword, 
       signOut, 
       signInWithOAuth,
-      fetchProfile 
+      fetchProfile,
+      refreshProfile
     }}>
       {children}
     </AuthContext.Provider>
