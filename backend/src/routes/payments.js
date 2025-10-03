@@ -62,12 +62,22 @@ router.post('/activate-premium', authenticateUser, async (req, res) => {
 
     console.log('🎉 Activating premium for user:', req.user.email);
 
+    // Calculate subscription end date (30 days from now for monthly plan)
+    const subscriptionStart = new Date();
+    const subscriptionEnd = new Date(subscriptionStart);
+    subscriptionEnd.setDate(subscriptionEnd.getDate() + 30); // 30 days for monthly plan
+
+    console.log('📅 Subscription period:');
+    console.log('   Start:', subscriptionStart.toISOString());
+    console.log('   End:', subscriptionEnd.toISOString());
+
     // Update user to premium
     const { error } = await supabase
       .from('profiles')
       .update({ 
         is_premium: true,
-        subscription_start: new Date().toISOString(),
+        subscription_start: subscriptionStart.toISOString(),
+        subscription_end: subscriptionEnd.toISOString(),
         stripe_session_id: sessionId
       })
       .eq('id', req.user.id);

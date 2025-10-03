@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiUser, FiMail, FiAward, FiSun, FiMoon, FiBell, FiLogOut, FiCreditCard, FiShield } from 'react-icons/fi';
+import { FiUser, FiMail, FiAward, FiSun, FiMoon, FiBell, FiLogOut, FiCreditCard, FiShield, FiClock, FiAlertCircle } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Link } from 'react-router-dom';
 import { getAvatarForEmail, getAvatarColor } from '../utils/avatars';
+import SubscriptionReminder from '../components/SubscriptionReminder';
 
 export default function Settings() {
   const { user, profile, signOut } = useAuth();
@@ -14,6 +15,52 @@ export default function Settings() {
     goals: true,
     results: false
   });
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [daysRemaining, setDaysRemaining] = useState(null);
+
+  // Calculate days remaining on subscription
+  useEffect(() => {
+    if (profile?.is_premium && profile?.subscription_end) {
+      const endDate = new Date(profile.subscription_end);
+      const today = new Date();
+      const diffTime = endDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      console.log('Subscription end date:', profile.subscription_end);
+      console.log('Days remaining:', diffDays);
+      
+      setDaysRemaining(diffDays);
+
+      // Show reminder popup at 5, 3, 2, and 1 days remaining
+      const reminderDays = [5, 3, 2, 1];
+      const lastShownKey = `reminder_shown_${diffDays}`;
+      const hasShownToday = localStorage.getItem(lastShownKey);
+
+      if (reminderDays.includes(diffDays) && !hasShownToday) {
+        setShowReminderModal(true);
+        localStorage.setItem(lastShownKey, 'true');
+        
+        // Clear old reminder flags
+        reminderDays.forEach(day => {
+          if (day !== diffDays) {
+            localStorage.removeItem(`reminder_shown_${day}`);
+          }
+        });
+      }
+    } else if (profile?.is_premium && !profile?.subscription_end) {
+      // If premium but no end date, set to 30 days from subscription_start or now
+      console.log('Premium user but no subscription_end date');
+      const startDate = profile?.subscription_start ? new Date(profile.subscription_start) : new Date();
+      const estimatedEnd = new Date(startDate);
+      estimatedEnd.setDate(estimatedEnd.getDate() + 30);
+      
+      const today = new Date();
+      const diffTime = estimatedEnd - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      setDaysRemaining(diffDays > 0 ? diffDays : 0);
+    }
+  }, [profile]);
 
   const handleSignOut = async () => {
     if (confirm('Are you sure you want to sign out?')) {
@@ -64,11 +111,38 @@ export default function Settings() {
             <p className="text-white/90 mb-3 text-sm md:text-base">{user?.email}</p>
             
             {profile?.is_premium ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-center md:justify-start space-x-2 bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full inline-flex">
-                  <FiAward className="w-5 h-5" />
-                  <span className="text-sm font-bold">⭐ Premium Member</span>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center space-x-2 bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
+                  <FiAward className="w-4 h-4" />
+                  <span className="text-sm font-bold whitespace-nowrap">⭐ Premium Member</span>
                 </div>
+                
+                {/* Subscription Countdown */}
+                {daysRemaining !== null && daysRemaining > 0 && (
+                  <div className={`flex items-center space-x-2 px-4 py-2 rounded-full shadow-md ${
+                    daysRemaining <= 3 
+                      ? 'bg-red-500/30 backdrop-blur-sm border border-red-300/50' 
+                      : daysRemaining <= 5
+                      ? 'bg-yellow-500/30 backdrop-blur-sm border border-yellow-300/50'
+                      : 'bg-white/20 backdrop-blur-sm border border-white/30'
+                  }`}>
+                    <FiClock className="w-4 h-4" />
+                    <span className="text-sm font-semibold whitespace-nowrap">
+                      {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining
+                    </span>
+                    {daysRemaining <= 3 && (
+                      <FiAlertCircle className="w-4 h-4 animate-pulse" />
+                    )}
+                  </div>
+                )}
+                
+                {daysRemaining !== null && daysRemaining <= 0 && (
+                  <div className="flex items-center space-x-2 bg-red-500/40 backdrop-blur-sm px-4 py-2 rounded-full border border-red-300/50 shadow-md">
+                    <FiAlertCircle className="w-4 h-4" />
+                    <span className="text-sm font-bold whitespace-nowrap">Subscription Expired</span>
+                  </div>
+                )}
+                
                 {profile?.subscription_start && (
                   <p className="text-white/80 text-sm">
                     Member since {new Date(profile.subscription_start).toLocaleDateString('en-US', { 
@@ -284,6 +358,12 @@ export default function Settings() {
           </button>
         </div>
       </motion.div>
+      {/* Subscription Reminder Modal */}
+      <SubscriptionReminder
+        isOpen={showReminderModal}
+        onClose={() => setShowReminderModal(false)}
+        daysRemaining={daysRemaining}
+      />
     </div>
   );
 }

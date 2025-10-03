@@ -134,9 +134,10 @@ class SportsDBService {
   }
 
   async getTeamLastMatches(teamId) {
+    // Fetch all matches (past and future) for the team
     return this.fetchWithCache(
-      `teams/${teamId}/matches?status=FINISHED&limit=5`,
-      `last_matches_${teamId}`,
+      `teams/${teamId}/matches`,
+      `team_matches_${teamId}`,
       'other',
       1800
     );
