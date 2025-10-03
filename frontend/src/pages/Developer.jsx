@@ -319,6 +319,68 @@ export default function Developer() {
         {showNotificationTester && <NotificationTester />}
       </motion.div>
 
+      {/* Push Notification Tester */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+        className="bg-white dark:bg-slate-800 rounded-2xl p-6 border-2 border-green-100 dark:border-green-900 shadow-lg"
+      >
+        <div className="flex items-center space-x-2 mb-4">
+          <i className="fas fa-satellite-dish text-green-600 dark:text-green-400 text-xl"></i>
+          <h3 className="text-2xl font-bold">Push Notifications</h3>
+        </div>
+        <div className="space-y-4">
+          <p className="text-gray-600 dark:text-gray-400">
+            Test server-side push notifications that work even when the app is closed.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={async () => {
+                try {
+                  const { subscribeToPush } = await import('../utils/pushNotifications');
+                  await subscribeToPush('developer');
+                  alert('✅ Subscribed to push notifications!');
+                } catch (error) {
+                  alert('❌ Failed to subscribe: ' + error.message);
+                }
+              }}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Subscribe to Push
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  const { sendTestNotification } = await import('../utils/pushNotifications');
+                  await sendTestNotification();
+                  alert('✅ Test push notification sent!');
+                } catch (error) {
+                  alert('❌ Failed to send: ' + error.message);
+                }
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Send Test Push
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  const { getPushStatus } = await import('../utils/pushNotifications');
+                  const status = await getPushStatus('developer');
+                  alert(`📊 Push Status:\n\nSupported: ${status.supported}\nPermission: ${status.permission}\nSubscribed: ${status.subscribed}\nVAPID Configured: ${status.vapidConfigured}`);
+                } catch (error) {
+                  alert('❌ Failed to get status: ' + error.message);
+                }
+              }}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              Check Status
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Copyright & Support */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

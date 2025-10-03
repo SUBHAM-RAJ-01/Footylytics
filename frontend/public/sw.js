@@ -85,3 +85,53 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('notificationclose', (event) => {
   console.log('Notification closed:', event.notification.tag);
 });
+
+// Push event - Handle incoming push notifications
+self.addEventListener('push', (event) => {
+  console.log('Push notification received:', event);
+  
+  let notificationData = {
+    title: 'Footylytics',
+    body: 'New football update available!',
+    icon: '/web/icon-192.png',
+    badge: '/web/icon-192.png',
+    data: { url: '/live-scores' }
+  };
+  
+  // Parse push data if available
+  if (event.data) {
+    try {
+      const pushData = event.data.json();
+      notificationData = { ...notificationData, ...pushData };
+    } catch (error) {
+      console.log('Push data parsing failed, using defaults');
+    }
+  }
+  
+  const options = {
+    body: notificationData.body,
+    icon: notificationData.icon,
+    badge: notificationData.badge,
+    image: notificationData.image,
+    data: notificationData.data,
+    actions: [
+      {
+        action: 'view',
+        title: 'View Match',
+        icon: '/web/icon-192.png'
+      },
+      {
+        action: 'close',
+        title: 'Dismiss'
+      }
+    ],
+    tag: notificationData.tag || 'footylytics-push',
+    requireInteraction: false,
+    vibrate: [200, 100, 200],
+    silent: false
+  };
+  
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, options)
+  );
+});

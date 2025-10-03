@@ -19,6 +19,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Developer from "./pages/Developer";
 import { checkScheduledNotifications } from "./utils/notifications";
+import { autoSubscribeToPush } from "./utils/pushNotifications";
 
 // Scroll to top component
 function ScrollToTop() {
@@ -35,6 +36,11 @@ function App() {
   // Check and reschedule notifications on app load
   useEffect(() => {
     checkScheduledNotifications();
+    
+    // Auto-subscribe to push notifications (optional)
+    setTimeout(() => {
+      autoSubscribeToPush('anonymous');
+    }, 3000); // Wait 3 seconds after app loads
   }, []);
 
   return (

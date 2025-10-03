@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Footylytics APK - Football Analytics App</title>
+    <link rel="icon" href="https://footylytics.netlify.app/web/icon-192.png">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #ff6b35, #f7931e, #ffd23f);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Animated Football Background */
+        .football-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .football {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: float 15s infinite linear;
+        }
+
+        .football::before {
+            content: '⚽';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+            }
+        }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Main Card */
+        .download-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 25px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1s ease-out;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 30px;
+            animation: bounce 2s infinite;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .title {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .version-info {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-bottom: 30px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* Download Button */
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px 40px;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            color: white;
+            text-decoration: none;
+            border-radius: 60px;
+            font-weight: bold;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(255,107,53,0.4);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 45px rgba(255,107,53,0.6);
+        }
+
+        .download-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .download-btn:hover::before {
+            left: 100%;
+        }
+
+        .download-icon {
+            font-size: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Alternative Options */
+        .alternatives {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #eee;
+        }
+
+        .alternatives h3 {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .alt-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .alt-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 25px;
+            background: #f8f9fa;
+            color: #666;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 2px solid #e9ecef;
+        }
+
+        .alt-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .coming-soon {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .instructions h4 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .instructions ol {
+            color: #666;
+            line-height: 1.8;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        /* App Info */
+        .app-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .info-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .info-icon {
+            font-size: 1.5rem;
+            color: #ff6b35;
+            margin-bottom: 8px;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #eee;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .footer a {
+            color: #ff6b35;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .download-card {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            .title {
+                font-size: 2.2rem;
+            }
+            
+            .download-btn {
+                padding: 18px 30px;
+                font-size: 1.1rem;
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .alt-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .alt-btn {
+                width: 100%;
+                max-width: 250px;
+                justify-content: center;
+            }
+        }
+
+        /* Success Animation */
+        .download-success {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .success-icon {
+            font-size: 3rem;
+            color: #28a745;
+            margin-bottom: 15px;
+            animation: bounce 1s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Football Background -->
+    <div class="football-bg" id="footballBg"></div>
+
+    <!-- Success Message -->
+    <div class="download-success" id="downloadSuccess">
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h3>Download Started!</h3>
+        <p>Check your downloads folder</p>
+    </div>
+
+    <div class="container">
+        <div class="download-card">
+            <!-- Logo -->
+            <div class="logo">
+                <img src="https://footylytics.netlify.app/web/icon-192.png" alt="Footylytics Logo">
+            </div>
+
+            <!-- Title -->
+            <h1 class="title">Footylytics</h1>
+            <p class="subtitle">AI-Powered Football Analytics</p>
+
+            <!-- Version Info -->
+            <div class="version-info">
+                <i class="fas fa-mobile-alt"></i>
+                Version 1.0.0 • Android APK
+            </div>
+
+            <!-- Main Download Button -->
+            <a href="#" class="download-btn" id="mainDownload">
+                <i class="fab fa-android download-icon"></i>
+                <div>
+                    <div>Download APK</div>
+                    <div style="font-size: 0.8em; opacity: 0.9;">Direct Install • 25MB</div>
+                </div>
+            </a>
+
+            <!-- App Info -->
+            <div class="app-info">
+                <div class="info-item">
+                    <div class="info-icon"><i class="fas fa-star"></i></div>
+                    <div class="info-label">Rating</div>
+                    <div class="info-value">4.8/5</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon"><i class="fas fa-download"></i></div>
+                    <div class="info-label">Downloads</div>
+                    <div class="info-value">10K+</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div class="info-label">Security</div>
+                    <div class="info-value">Safe</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon"><i class="fas fa-mobile-alt"></i></div>
+                    <div class="info-label">Size</div>
+                    <div class="info-value">25MB</div>
+                </div>
+            </div>
+
+            <!-- Installation Instructions -->
+            <div class="instructions">
+                <h4>
+                    <i class="fas fa-info-circle"></i>
+                    Installation Instructions
+                </h4>
+                <ol>
+                    <li>Download the APK file by clicking the button above</li>
+                    <li>Go to Settings → Security → Enable "Unknown Sources"</li>
+                    <li>Open the downloaded APK file from your Downloads folder</li>
+                    <li>Tap "Install" and follow the prompts</li>
+                    <li>Launch Footylytics and enjoy! ⚽</li>
+                </ol>
+            </div>
+
+            <!-- Alternative Options -->
+            <div class="alternatives">
+                <h3>Other Options</h3>
+                <div class="alt-buttons">
+                    <a href="https://footylytics.netlify.app" class="alt-btn">
+                        <i class="fas fa-globe"></i>
+                        Web Version
+                    </a>
+                    <a href="#" class="alt-btn coming-soon">
+                        <i class="fab fa-google-play"></i>
+                        Play Store (Soon)
+                    </a>
+                    <a href="#" class="alt-btn coming-soon">
+                        <i class="fab fa-app-store-ios"></i>
+                        App Store (Soon)
+                    </a>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <p>
+                    <i class="fas fa-shield-alt"></i>
+                    Safe & Secure Download
+                </p>
+                <p>
+                    Need help? Visit <a href="https://footylytics.netlify.app">footylytics.netlify.app</a>
+                </p>
+                <p style="margin-top: 15px;">
+                    © 2024 Footylytics. Made with <i class="fas fa-heart" style="color: #ff6b35;"></i> for football fans
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create floating footballs
+        function createFootball() {
+            const football = document.createElement('div');
+            football.className = 'football';
+            football.style.left = Math.random() * 100 + '%';
+            football.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            football.style.animationDelay = Math.random() * 5 + 's';
+            
+            document.getElementById('footballBg').appendChild(football);
+            
+            // Remove football after animation
+            setTimeout(() => {
+                if (football.parentNode) {
+                    football.parentNode.removeChild(football);
+                }
+            }, 20000);
+        }
+
+        // Create footballs periodically
+        setInterval(createFootball, 2000);
+
+        // Download handler
+        document.getElementById('mainDownload').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Show confirmation
+            if (confirm('🏈 Download Footylytics APK?\n\nThis will download the latest version of Footylytics for Android.\n\nMake sure to enable "Install from unknown sources" in your device settings.\n\nContinue?')) {
+                
+                // Show success message
+                const successMsg = document.getElementById('downloadSuccess');
+                successMsg.style.display = 'block';
+                
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    successMsg.style.display = 'none';
+                }, 3000);
+                
+                // Replace this URL with your actual APK download link
+                // window.open('YOUR_APK_DOWNLOAD_URL_HERE', '_blank');
+                
+                // For now, show instructions
+                setTimeout(() => {
+                    alert('📱 Next Steps:\n\n1. The APK will start downloading\n2. Enable "Unknown Sources" in Android Settings\n3. Open the downloaded file\n4. Tap "Install"\n5. Enjoy Footylytics! ⚽\n\nNeed help? Visit footylytics.netlify.app');
+                }, 1000);
+                
+                // Simulate download (remove this when you have real APK)
+                console.log('APK download would start here');
+                
+                // Add your actual APK download URL here:
+                // window.location.href = 'https://your-server.com/footylytics.apk';
+            }
+        });
+
+        // Add loading animation
+        window.addEventListener('load', () => {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease-in-out';
+            
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+
+        // Add parallax effect
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelector('.football-bg');
+            const speed = scrolled * 0.3;
+            parallax.style.transform = `translateY(${speed}px)`;
+        });
+
+        // Prevent right-click (optional security)
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>

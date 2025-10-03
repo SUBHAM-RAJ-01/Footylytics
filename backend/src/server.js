@@ -12,6 +12,7 @@ import userRoutes from './routes/users.js';
 import paymentRoutes from './routes/payments.js';
 import authRoutes from './routes/auth.js';
 import notificationRoutes from './routes/notifications.js';
+import pushRoutes from './routes/push.js';
 
 dotenv.config();
 
@@ -81,9 +82,14 @@ app.use('/api/predictions', predictionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/push', pushRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    pushNotifications: !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY)
+  });
 });
 
 app.listen(PORT, () => {
