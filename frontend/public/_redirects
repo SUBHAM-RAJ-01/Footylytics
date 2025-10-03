@@ -1,1 +1,28 @@
-/* /index.html 200
+# Netlify _redirects file for SPA routing
+# Static assets should not be redirected
+/assets/*  /assets/:splat  200
+/web/*     /web/:splat     200
+/screenshots/* /screenshots/:splat 200
+/android/* /android/:splat 200
+/ios/*     /ios/:splat     200
+
+# Specific files that should not be redirected
+/manifest.json  /manifest.json  200
+/sw.js          /sw.js          200
+/flogo.svg      /flogo.svg      200
+/clear-cache.html /clear-cache.html 200
+/*.js           /:splat         200
+/*.css          /:splat         200
+/*.png          /:splat         200
+/*.jpg          /:splat         200
+/*.jpeg         /:splat         200
+/*.svg          /:splat         200
+/*.ico          /:splat         200
+/*.json         /:splat         200
+/*.woff         /:splat         200
+/*.woff2        /:splat         200
+/*.ttf          /:splat         200
+/*.eot          /:splat         200
+
+# SPA fallback - this should be last
+/*  /index.html  200

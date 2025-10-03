@@ -17,23 +17,196 @@
     body {
       margin: 0;
       background-color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     }
     #root {
       min-height: 100vh;
     }
+    
+    /* Loading screen for when JS fails to load */
+    .loading-fallback {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      z-index: 9999;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    
+    .loading-subtext {
+      font-size: 14px;
+      opacity: 0.8;
+      text-align: center;
+      max-width: 300px;
+    }
+    
+    .error-actions {
+      margin-top: 30px;
+    }
+    
+    .error-button {
+      background: rgba(255,255,255,0.2);
+      border: 2px solid white;
+      color: white;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    
+    .error-button:hover {
+      background: rgba(255,255,255,0.3);
+    }
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
+  <div id="root">
+    <!-- Fallback loading screen -->
+    <div class="loading-fallback" id="loading-fallback">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading Footylytics...</div>
+      <div class="loading-subtext">Getting the latest football data ready for you</div>
+      <div class="error-actions" id="error-actions" style="display: none;">
+        <div style="margin-bottom: 15px; color: #ffeb3b;">⚠️ Taking longer than usual</div>
+        <a href="?clear-cache=1" class="error-button">Clear Cache & Retry</a>
+        <a href="/clear-cache.html" class="error-button">Advanced Reset</a>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Error handling for module loading
+    window.addEventListener('error', (event) => {
+      console.error('Global error:', event.error);
+      const fallback = document.getElementById('loading-fallback');
+      const errorActions = document.getElementById('error-actions');
+      if (fallback) {
+        fallback.querySelector('.loading-text').textContent = 'Loading Error Detected';
+        fallback.querySelector('.loading-subtext').textContent = 'There was an issue loading the app. Please try the options below.';
+        errorActions.style.display = 'block';
+      }
+    });
+
+    // Handle module loading errors
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('Unhandled promise rejection:', event.reason);
+    });
+
+    // Show error options if loading takes too long
+    setTimeout(() => {
+      const fallback = document.getElementById('loading-fallback');
+      const errorActions = document.getElementById('error-actions');
+      if (fallback && fallback.style.display !== 'none') {
+        console.log('App taking too long to load, showing error options');
+        errorActions.style.display = 'block';
+      }
+    }, 5000); // Reduced to 5 seconds
+    
+    // Monitor for React app loading
+    let checkCount = 0;
+    const checkForApp = () => {
+      checkCount++;
+      const fallback = document.getElementById('loading-fallback');
+      const root = document.getElementById('root');
+      
+      // Check if React has rendered anything
+      if (root && root.children.length > 1) {
+        console.log('React app detected, hiding fallback');
+        if (fallback) fallback.style.display = 'none';
+        return;
+      }
+      
+      // Keep checking for up to 30 seconds
+      if (checkCount < 60) {
+        setTimeout(checkForApp, 500);
+      } else {
+        console.log('React app failed to load after 30 seconds');
+        const errorActions = document.getElementById('error-actions');
+        if (errorActions) errorActions.style.display = 'block';
+      }
+    };
+    
+    // Start checking after DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(checkForApp, 1000);
+    });
+  </script>
+
+  <script type="module" src="/src/main.jsx" onerror="console.error('Failed to load main.jsx')"></script>
   <script>
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('Service Worker registered'))
-          .catch(err => console.log('Service Worker registration failed'));
+        navigator.serviceWorker.register('/sw.js', {
+          scope: '/',
+          updateViaCache: 'none'
+        })
+        .then(registration => {
+          console.log('Service Worker registered successfully');
+          
+          // Handle updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('New service worker available');
+                }
+              });
+            }
+          });
+        })
+        .catch(err => {
+          console.error('Service Worker registration failed:', err);
+        });
       });
+    }
+
+    // Emergency cache clear
+    if (window.location.search.includes('clear-cache') || window.location.search.includes('reset')) {
+      console.log('Emergency cache clear triggered');
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(registration => registration.unregister());
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+      localStorage.clear();
+      sessionStorage.clear();
+      // Remove query params and reload
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setTimeout(() => window.location.reload(), 500);
     }
   </script>
 </body>
