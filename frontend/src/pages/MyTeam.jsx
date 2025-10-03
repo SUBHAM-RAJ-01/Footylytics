@@ -189,8 +189,8 @@ export default function MyTeam() {
     try {
       // Fetch team info and matches in parallel
       const [infoResponse, matchesResponse] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL}/teams/${selectedTeam.id}`),
-        axios.get(`${import.meta.env.VITE_API_URL}/teams/${selectedTeam.id}/matches`)
+        axios.get(`https://footylytics.onrender.com/api/teams/${selectedTeam.id}`),
+        axios.get(`https://footylytics.onrender.com/api/teams/${selectedTeam.id}/matches`)
       ]);
       
       console.log('Team Info:', infoResponse.data);

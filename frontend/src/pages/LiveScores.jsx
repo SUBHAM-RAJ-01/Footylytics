@@ -50,7 +50,7 @@ export default function LiveScores() {
   const fetchLiveScores = async (manual = false) => {
     if (manual) setRefreshing(true);
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/matches/live`);
+      const { data } = await axios.get(`https://footylytics.onrender.com/api/matches/live`);
       setMatches(data.matches || []);
       setLastUpdate(new Date());
     } catch (error) {

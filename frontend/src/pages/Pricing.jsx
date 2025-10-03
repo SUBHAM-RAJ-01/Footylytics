@@ -25,7 +25,7 @@ const plans = [
     name: 'Premium Monthly',
     price: '₹29',
     period: '/month',
-    priceId: import.meta.env.VITE_STRIPE_PRICE_ID_MONTHLY || 'price_monthly',
+    priceId: import.meta.env.VITE_STRIPE_PRICE_ID_MONTHLY,
     features: [
       'Everything in Free',
       'AI-powered predictions',
@@ -43,7 +43,7 @@ const plans = [
     price: '₹299',
     period: '/year',
     savings: 'Save ₹49',
-    priceId: import.meta.env.VITE_STRIPE_PRICE_ID_YEARLY || 'price_yearly',
+    priceId: import.meta.env.VITE_STRIPE_PRICE_ID_YEARLY,
     features: [
       'Everything in Premium Monthly',
       'Best value - 2 months free',
@@ -70,7 +70,7 @@ export default function Pricing() {
 
     try {
       const { data } = await axios.post(
-        `${import.meta.env.VITE_API_URL}/payments/create-checkout-session`,
+        `https://footylytics.onrender.com/api/payments/create-checkout-session`,
         { priceId },
         {
           headers: {

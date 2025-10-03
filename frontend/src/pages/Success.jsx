@@ -35,7 +35,7 @@ export default function Success() {
 
         // Call backend to activate premium
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL}/payments/activate-premium`,
+          `https://footylytics.onrender.com/api/payments/activate-premium`,
           { sessionId },
           {
             headers: {

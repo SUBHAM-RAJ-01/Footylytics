@@ -105,7 +105,7 @@ export default function Navbar({ onMenuClick }) {
     setLoading(true);
     try {
       const { data } = await axios.get(
-        `${import.meta.env.VITE_API_URL}/notifications/user/${user.id}`
+        `https://footylytics.onrender.com/api/notifications/user/${user.id}`
       );
       setNotifications(data.notifications || []);
     } catch (error) {
@@ -129,7 +129,7 @@ export default function Navbar({ onMenuClick }) {
 
   const handleRemoveNotification = async (notificationId, matchId) => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/notifications/toggle`, {
+      await axios.post(`https://footylytics.onrender.com/api/notifications/toggle`, {
         userId: user.id,
         matchId: matchId,
         matchData: {},

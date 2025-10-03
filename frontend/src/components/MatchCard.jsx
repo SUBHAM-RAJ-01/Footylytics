@@ -41,7 +41,7 @@ export default function MatchCard({ match }) {
       if (!user || !isScheduled) return;
       
       try {
-        const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/notifications/user/${user.id}`);
+        const { data } = await axios.get(`https://footylytics.onrender.com/api/notifications/user/${user.id}`);
         const isSubscribed = data.notifications?.some(n => n.match_id === match.id.toString());
         setIsNotifying(isSubscribed);
       } catch (error) {
@@ -105,7 +105,7 @@ export default function MatchCard({ match }) {
         matchDate: matchDay
       };
 
-      const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/notifications/toggle`, {
+      const { data } = await axios.post(`https://footylytics.onrender.com/api/notifications/toggle`, {
         userId: user.id,
         matchId: match.id.toString(),
         matchData

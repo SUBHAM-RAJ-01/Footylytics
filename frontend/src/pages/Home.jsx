@@ -32,7 +32,7 @@ export default function Home() {
       // Fetch matches from multiple top leagues
       const leagueIds = ['2021', '2014', '2001', '2002', '2019', '2015']; // PL, LaLiga, UCL, Bundesliga, Serie A, Ligue 1
       const promises = leagueIds.map(id => 
-        axios.get(`${import.meta.env.VITE_API_URL}/matches/fixtures/${id}`)
+        axios.get(`https://footylytics.onrender.com/api/matches/fixtures/${id}`)
           .catch(() => ({ data: { matches: [] } }))
       );
       
@@ -53,6 +53,7 @@ export default function Home() {
       setMatches(relevantMatches);
     } catch (error) {
       console.error('Failed to fetch matches:', error);
+      console.error('Error details:', error.response?.data || error.message);
       setMatches([]);
     } finally {
       setLoading(false);
@@ -73,115 +74,7 @@ export default function Home() {
     }).length;
   };
 
-  // Mock data for demo when no real matches
-  const getMockMatches = () => {
-    const now = new Date();
-    return [
-      {
-        id: 'mock-1',
-        utcDate: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
-        status: 'TIMED',
-        homeTeam: { 
-          id: 66, 
-          name: 'Manchester United', 
-          crest: 'https://crests.football-data.org/66.png' 
-        },
-        awayTeam: { 
-          id: 64, 
-          name: 'Liverpool', 
-          crest: 'https://crests.football-data.org/64.png' 
-        },
-        score: { fullTime: { home: null, away: null }, halfTime: { home: null, away: null } },
-        competition: { id: 2021, name: 'Premier League' }
-      },
-      {
-        id: 'mock-2',
-        utcDate: new Date(now.getTime() + 4 * 60 * 60 * 1000).toISOString(),
-        status: 'TIMED',
-        homeTeam: { 
-          id: 57, 
-          name: 'Arsenal', 
-          crest: 'https://crests.football-data.org/57.png' 
-        },
-        awayTeam: { 
-          id: 61, 
-          name: 'Chelsea', 
-          crest: 'https://crests.football-data.org/61.png' 
-        },
-        score: { fullTime: { home: null, away: null }, halfTime: { home: null, away: null } },
-        competition: { id: 2021, name: 'Premier League' }
-      },
-      {
-        id: 'mock-3',
-        utcDate: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-        status: 'FINISHED',
-        homeTeam: { 
-          id: 86, 
-          name: 'Real Madrid', 
-          crest: 'https://crests.football-data.org/86.png' 
-        },
-        awayTeam: { 
-          id: 81, 
-          name: 'Barcelona', 
-          crest: 'https://crests.football-data.org/81.png' 
-        },
-        score: { fullTime: { home: 2, away: 1 }, halfTime: { home: 1, away: 0 } },
-        competition: { id: 2014, name: 'La Liga' }
-      },
-      {
-        id: 'mock-5',
-        utcDate: new Date(now.getTime() + 6 * 60 * 60 * 1000).toISOString(),
-        status: 'TIMED',
-        homeTeam: { 
-          id: 98, 
-          name: 'AC Milan', 
-          crest: 'https://crests.football-data.org/98.png' 
-        },
-        awayTeam: { 
-          id: 100, 
-          name: 'Inter Milan', 
-          crest: 'https://crests.football-data.org/100.png' 
-        },
-        score: { fullTime: { home: null, away: null }, halfTime: { home: null, away: null } },
-        competition: { id: 2001, name: 'Champions League' }
-      },
-      {
-        id: 'mock-6',
-        utcDate: new Date(now.getTime() + 8 * 60 * 60 * 1000).toISOString(),
-        status: 'TIMED',
-        homeTeam: { 
-          id: 5, 
-          name: 'Bayern Munich', 
-          crest: 'https://crests.football-data.org/5.png' 
-        },
-        awayTeam: { 
-          id: 4, 
-          name: 'Borussia Dortmund', 
-          crest: 'https://crests.football-data.org/4.png' 
-        },
-        score: { fullTime: { home: null, away: null }, halfTime: { home: null, away: null } },
-        competition: { id: 2002, name: 'Bundesliga' }
-      },
-      {
-        id: 'mock-4',
-        utcDate: now.toISOString(),
-        status: 'IN_PLAY',
-        minute: 67,
-        homeTeam: { 
-          id: 65, 
-          name: 'Manchester City', 
-          crest: 'https://crests.football-data.org/65.png' 
-        },
-        awayTeam: { 
-          id: 73, 
-          name: 'Tottenham', 
-          crest: 'https://crests.football-data.org/73.png' 
-        },
-        score: { fullTime: { home: null, away: null }, halfTime: { home: 1, away: 1 } },
-        competition: { id: 2021, name: 'Premier League' }
-      }
-    ];
-  };
+
 
   const liveMatches = matches.filter(m => m.status === 'IN_PLAY' || m.status === 'PAUSED');
   const upcomingMatches = matches.filter(m => m.status === 'SCHEDULED' || m.status === 'TIMED');

@@ -42,7 +42,7 @@ export default function Standings() {
     setLoading(true);
     const idToFetch = leagueId || '2001';
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/leagues/${idToFetch}/standings`);
+      const { data } = await axios.get(`https://footylytics.onrender.com/api/leagues/${idToFetch}/standings`);
       setStandings(data.standings?.[0]?.table || []);
     } catch (error) {
       console.error('Failed to fetch standings:', error);

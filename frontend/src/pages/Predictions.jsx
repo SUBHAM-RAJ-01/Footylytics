@@ -24,7 +24,7 @@ export default function Predictions() {
       // Fetch from multiple top leagues
       const leagueIds = ['2021', '2014', '2019', '2002']; // PL, LaLiga, Serie A, Bundesliga
       const promises = leagueIds.map(id => 
-        axios.get(`${import.meta.env.VITE_API_URL}/matches/fixtures/${id}`).catch(() => ({ data: { matches: [] } }))
+        axios.get(`https://footylytics.onrender.com/api/matches/fixtures/${id}`).catch(() => ({ data: { matches: [] } }))
       );
       const results = await Promise.all(promises);
       const allMatches = results.flatMap(r => r.data.matches || []);
@@ -49,7 +49,7 @@ export default function Predictions() {
 
     try {
       const { data } = await axios.post(
-        `${import.meta.env.VITE_API_URL}/predictions/predict`,
+        `https://footylytics.onrender.com/api/predictions/predict`,
         { match },
         {
           headers: {

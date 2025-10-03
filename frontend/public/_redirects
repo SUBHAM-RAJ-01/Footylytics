@@ -11,6 +11,7 @@
 /sw.js          /sw.js          200
 /flogo.svg      /flogo.svg      200
 /clear-cache.html /clear-cache.html 200
+/env-check.html /env-check.html 200
 /*.js           /:splat         200
 /*.css          /:splat         200
 /*.png          /:splat         200

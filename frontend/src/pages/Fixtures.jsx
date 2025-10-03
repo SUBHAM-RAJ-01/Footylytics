@@ -1,41 +1,43 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import axios from 'axios';
-import { motion } from 'framer-motion';
-import MatchCard from '../components/MatchCard';
-import { FiCalendar, FiFilter, FiSearch, FiX } from 'react-icons/fi';
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import axios from "axios";
+import { motion } from "framer-motion";
+import MatchCard from "../components/MatchCard";
+import { FiCalendar, FiFilter, FiSearch, FiX } from "react-icons/fi";
 
 const leagues = [
-  { id: '2001', name: 'UEFA Champions League' },
-  { id: '2021', name: 'Premier League' },
-  { id: '2014', name: 'LaLiga' },
-  { id: '2002', name: 'Bundesliga' },
-  { id: '2019', name: 'Serie A' },
-  { id: '2015', name: 'Ligue 1' },
-  { id: '2146', name: 'UEFA Europa League' },
-  { id: '2000', name: 'FIFA World Cup' }
+  { id: "2001", name: "UEFA Champions League" },
+  { id: "2021", name: "Premier League" },
+  { id: "2014", name: "LaLiga" },
+  { id: "2002", name: "Bundesliga" },
+  { id: "2019", name: "Serie A" },
+  { id: "2015", name: "Ligue 1" },
+  { id: "2146", name: "UEFA Europa League" },
+  { id: "2000", name: "FIFA World Cup" },
 ];
 
 const leagueLogos = {
-  '2001': 'https://crests.football-data.org/CL.png',
-  '2021': 'https://crests.football-data.org/PL.png',
-  '2014': 'https://crests.football-data.org/PD.png',
-  '2002': 'https://crests.football-data.org/BL1.png',
-  '2019': 'https://crests.football-data.org/SA.png',
-  '2015': 'https://crests.football-data.org/FL1.png',
-  '2146': 'https://crests.football-data.org/EL.png',
-  '2000': 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e3/2022_FIFA_World_Cup.svg/200px-2022_FIFA_World_Cup.svg.png'
+  2001: "https://crests.football-data.org/CL.png",
+  2021: "https://crests.football-data.org/PL.png",
+  2014: "https://crests.football-data.org/PD.png",
+  2002: "https://crests.football-data.org/BL1.png",
+  2019: "https://crests.football-data.org/SA.png",
+  2015: "https://crests.football-data.org/FL1.png",
+  2146: "https://crests.football-data.org/EL.png",
+  2000: "https://upload.wikimedia.org/wikipedia/en/thumb/e/e3/2022_FIFA_World_Cup.svg/200px-2022_FIFA_World_Cup.svg.png",
 };
 
 export default function Fixtures() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [fixtures, setFixtures] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedLeague, setSelectedLeague] = useState(searchParams.get('league') || 'all');
-  const [teamSearchQuery, setTeamSearchQuery] = useState('');
+  const [selectedLeague, setSelectedLeague] = useState(
+    searchParams.get("league") || "all"
+  );
+  const [teamSearchQuery, setTeamSearchQuery] = useState("");
 
   // Filter fixtures based on team search
-  const filteredFixtures = fixtures.filter(match => {
+  const filteredFixtures = fixtures.filter((match) => {
     if (!teamSearchQuery) return true;
     const query = teamSearchQuery.toLowerCase();
     return (
@@ -47,7 +49,7 @@ export default function Fixtures() {
 
   // Update selected league when URL changes
   useEffect(() => {
-    const leagueParam = searchParams.get('league');
+    const leagueParam = searchParams.get("league");
     if (leagueParam) {
       setSelectedLeague(leagueParam);
     }
@@ -60,21 +62,26 @@ export default function Fixtures() {
   const fetchFixtures = async () => {
     setLoading(true);
     try {
-      if (selectedLeague === 'all') {
+      if (selectedLeague === "all") {
         // Fetch fixtures from multiple top leagues
-        const leagueIds = ['2001', '2021', '2014', '2146', '2000']; // UCL, PL, LaLiga, Europa, World Cup
-        const promises = leagueIds.map(id => 
-          axios.get(`${import.meta.env.VITE_API_URL}/matches/fixtures/${id}`).catch(() => ({ data: { matches: [] } }))
+        const leagueIds = ["2001", "2021", "2014", "2146", "2000"]; // UCL, PL, LaLiga, Europa, World Cup
+        const promises = leagueIds.map((id) =>
+          axios
+            .get(`https://footylytics.onrender.com/api/matches/fixtures/${id}`)
+            .catch(() => ({ data: { matches: [] } }))
         );
         const results = await Promise.all(promises);
-        const allMatches = results.flatMap(r => r.data.matches || []);
+        const allMatches = results.flatMap((r) => r.data.matches || []);
         setFixtures(allMatches);
       } else {
-        const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/matches/fixtures/${selectedLeague}`);
+        const { data } = await axios.get(
+          `https://footylytics.onrender.com/api/matches/fixtures/${selectedLeague}`
+        );
         setFixtures(data.matches || []);
       }
     } catch (error) {
-      console.error('Failed to fetch fixtures:', error);
+      console.error("Failed to fetch fixtures:", error);
+      console.error("Error details:", error.response?.data || error.message);
       setFixtures([]);
     } finally {
       setLoading(false);
@@ -84,18 +91,22 @@ export default function Fixtures() {
   // Filter matches by date
   const now = new Date();
   const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
-  
-  const recentResults = filteredFixtures.filter(m => {
-    if (m.status !== 'FINISHED') return false;
-    const matchDate = m.utcDate ? new Date(m.utcDate) : null;
-    return matchDate && matchDate >= fiveDaysAgo && matchDate <= now;
-  }).sort((a, b) => new Date(b.utcDate) - new Date(a.utcDate));
 
-  const upcomingFixtures = filteredFixtures.filter(m => {
-    if (m.status !== 'SCHEDULED' && m.status !== 'TIMED') return false;
-    const matchDate = m.utcDate ? new Date(m.utcDate) : null;
-    return matchDate && matchDate >= now;
-  }).sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+  const recentResults = filteredFixtures
+    .filter((m) => {
+      if (m.status !== "FINISHED") return false;
+      const matchDate = m.utcDate ? new Date(m.utcDate) : null;
+      return matchDate && matchDate >= fiveDaysAgo && matchDate <= now;
+    })
+    .sort((a, b) => new Date(b.utcDate) - new Date(a.utcDate));
+
+  const upcomingFixtures = filteredFixtures
+    .filter((m) => {
+      if (m.status !== "SCHEDULED" && m.status !== "TIMED") return false;
+      const matchDate = m.utcDate ? new Date(m.utcDate) : null;
+      return matchDate && matchDate >= now;
+    })
+    .sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
 
   return (
     <div className="space-y-6">
@@ -131,7 +142,7 @@ export default function Fixtures() {
               animate={{ scale: 1 }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => setTeamSearchQuery('')}
+              onClick={() => setTeamSearchQuery("")}
               className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 bg-gray-200 dark:bg-slate-700 rounded-full hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
             >
               <FiX className="w-4 h-4" />
@@ -144,7 +155,8 @@ export default function Fixtures() {
             animate={{ opacity: 1 }}
             className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center"
           >
-            Found {filteredFixtures.length} match{filteredFixtures.length !== 1 ? 'es' : ''} for "{teamSearchQuery}"
+            Found {filteredFixtures.length} match
+            {filteredFixtures.length !== 1 ? "es" : ""} for "{teamSearchQuery}"
           </motion.p>
         )}
       </motion.div>
@@ -154,31 +166,33 @@ export default function Fixtures() {
         <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
           Filter by League
         </h3>
-        
+
         {/* League Grid */}
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => {
-              setSelectedLeague('all');
+              setSelectedLeague("all");
               setSearchParams({});
-              setTeamSearchQuery(''); // Clear search when changing league
+              setTeamSearchQuery(""); // Clear search when changing league
             }}
             className="flex flex-col items-center justify-center transition-all"
             title="All Leagues"
           >
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all border-2 ${
-              selectedLeague === 'all'
-                ? 'bg-gradient-to-br from-blue-600 to-emerald-600 text-white border-blue-600 dark:border-emerald-500'
-                : 'bg-white dark:bg-slate-700 border-transparent hover:border-gray-300 dark:hover:border-slate-600'
-            }`}>
+            <div
+              className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all border-2 ${
+                selectedLeague === "all"
+                  ? "bg-gradient-to-br from-blue-600 to-emerald-600 text-white border-blue-600 dark:border-emerald-500"
+                  : "bg-white dark:bg-slate-700 border-transparent hover:border-gray-300 dark:hover:border-slate-600"
+              }`}
+            >
               <FiFilter className="w-6 h-6" />
             </div>
             <span className="text-xs mt-1.5 font-medium">All</span>
           </motion.button>
-          
-          {leagues.map(league => (
+
+          {leagues.map((league) => (
             <motion.button
               key={league.id}
               whileHover={{ scale: 1.1 }}
@@ -186,24 +200,28 @@ export default function Fixtures() {
               onClick={() => {
                 setSelectedLeague(league.id);
                 setSearchParams({ league: league.id });
-                setTeamSearchQuery(''); // Clear search when changing league
+                setTeamSearchQuery(""); // Clear search when changing league
               }}
               className="flex flex-col items-center justify-center transition-all"
               title={league.name}
             >
-              <div className={`w-14 h-14 rounded-full bg-white shadow-lg flex items-center justify-center p-2 transition-all border-2 ${
-                selectedLeague === league.id
-                  ? 'border-blue-600 dark:border-emerald-500 shadow-xl'
-                  : 'border-transparent hover:border-gray-300'
-              }`}>
-                <img 
-                  src={leagueLogos[league.id] || '/placeholder-league.png'} 
+              <div
+                className={`w-14 h-14 rounded-full bg-white shadow-lg flex items-center justify-center p-2 transition-all border-2 ${
+                  selectedLeague === league.id
+                    ? "border-blue-600 dark:border-emerald-500 shadow-xl"
+                    : "border-transparent hover:border-gray-300"
+                }`}
+              >
+                <img
+                  src={leagueLogos[league.id] || "/placeholder-league.png"}
                   alt={league.name}
                   className="w-full h-full object-contain"
                   loading="lazy"
                 />
               </div>
-              <span className="text-xs mt-1.5 font-medium truncate w-full text-center">{league.name.split(' ')[0]}</span>
+              <span className="text-xs mt-1.5 font-medium truncate w-full text-center">
+                {league.name.split(" ")[0]}
+              </span>
             </motion.button>
           ))}
         </div>
@@ -212,8 +230,11 @@ export default function Fixtures() {
       {/* Loading State */}
       {loading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="bg-gray-200 dark:bg-slate-800 rounded-xl h-56 animate-pulse"></div>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="bg-gray-200 dark:bg-slate-800 rounded-xl h-56 animate-pulse"
+            ></div>
           ))}
         </div>
       ) : (
@@ -223,12 +244,13 @@ export default function Fixtures() {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">Upcoming Fixtures</h2>
               <span className="text-sm text-gray-500 dark:text-gray-400">
-                {upcomingFixtures.length} match{upcomingFixtures.length !== 1 ? 'es' : ''}
+                {upcomingFixtures.length} match
+                {upcomingFixtures.length !== 1 ? "es" : ""}
               </span>
             </div>
             {upcomingFixtures.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {upcomingFixtures.map(match => (
+                {upcomingFixtures.map((match) => (
                   <MatchCard key={match.id} match={match} />
                 ))}
               </div>
@@ -248,14 +270,17 @@ export default function Fixtures() {
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold flex items-center space-x-2">
                   <span>Recent Results</span>
-                  <span className="text-sm font-normal text-gray-500 dark:text-gray-400">(Last 5 days)</span>
+                  <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                    (Last 5 days)
+                  </span>
                 </h2>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {recentResults.length} match{recentResults.length !== 1 ? 'es' : ''}
+                  {recentResults.length} match
+                  {recentResults.length !== 1 ? "es" : ""}
                 </span>
               </div>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {recentResults.map(match => (
+                {recentResults.map((match) => (
                   <MatchCard key={match.id} match={match} />
                 ))}
               </div>

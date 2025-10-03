@@ -1,5 +1,5 @@
 // Minimal Service Worker for PWA - Focus on notifications only
-const CACHE_NAME = 'footylytics-v3';
+const CACHE_NAME = 'footylytics-v4';
 
 // Install event - minimal caching
 self.addEventListener('install', (event) => {
