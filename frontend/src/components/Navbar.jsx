@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { FiSun, FiMoon, FiBell, FiMenu, FiZap, FiAward, FiX, FiCalendar } from "react-icons/fi";
+import { FiSun, FiMoon, FiBell, FiMenu, FiZap, FiAward, FiX, FiCalendar, FiDownload } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
@@ -13,6 +13,9 @@ export default function Navbar({ onMenuClick }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showPWAPrompt, setShowPWAPrompt] = useState(false);
+  const [showPWAPopup, setShowPWAPopup] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
   const dropdownRef = useRef(null);
 
   // Fetch notifications when user is logged in
@@ -23,6 +26,49 @@ export default function Navbar({ onMenuClick }) {
       setNotifications([]);
     }
   }, [user]);
+
+  // PWA Install Prompt
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      
+      // Show PWA prompt on mobile/tablet
+      const isMobileOrTablet = window.innerWidth <= 1024;
+      if (isMobileOrTablet) {
+        setShowPWAPrompt(true);
+        
+        // Show popup notification once per 7 days
+        const lastShown = localStorage.getItem('pwaPopupLastShown');
+        const now = Date.now();
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        
+        if (!lastShown || now - parseInt(lastShown) > sevenDays) {
+          setTimeout(() => {
+            setShowPWAPopup(true);
+            localStorage.setItem('pwaPopupLastShown', now.toString());
+          }, 2000); // Show after 2 seconds
+        }
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handlePWAInstall = async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      setShowPWAPrompt(false);
+      setShowPWAPopup(false);
+    }
+    
+    setDeferredPrompt(null);
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -80,9 +126,93 @@ export default function Navbar({ onMenuClick }) {
   };
 
   return (
-    <nav className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <>
+      {/* PWA Install Banner */}
+      <AnimatePresence>
+        {showPWAPrompt && (
+          <motion.div
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            className="bg-gradient-to-r from-blue-600 to-emerald-600 text-white py-2 px-4 text-center relative z-50"
+          >
+            <div className="flex items-center justify-between max-w-7xl mx-auto">
+              <div className="flex items-center space-x-2 flex-1">
+                <FiDownload className="w-4 h-4 flex-shrink-0" />
+                <p className="text-xs sm:text-sm font-medium">
+                  Experience Footylytics as a PWA! Use Chrome to install.
+                </p>
+              </div>
+              <div className="flex items-center space-x-2 ml-2">
+                <button
+                  onClick={handlePWAInstall}
+                  className="px-3 py-1 bg-white text-blue-600 rounded-lg text-xs sm:text-sm font-semibold hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Get Now
+                </button>
+                <button
+                  onClick={() => setShowPWAPrompt(false)}
+                  className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <FiX className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* PWA Install Popup Notification */}
+      <AnimatePresence>
+        {showPWAPopup && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 50 }}
+            className="fixed bottom-4 right-4 z-50 max-w-sm"
+          >
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 p-4 sm:p-5">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-600 to-emerald-600 rounded-xl flex items-center justify-center">
+                  <FiDownload className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                    Install Footylytics
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                    Get the app experience! Install now for quick access and offline support.
+                  </p>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={handlePWAInstall}
+                      className="px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-all"
+                    >
+                      Install Now
+                    </button>
+                    <button
+                      onClick={() => setShowPWAPopup(false)}
+                      className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Later
+                    </button>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowPWAPopup(false)}
+                  className="flex-shrink-0 p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                >
+                  <FiX className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <nav className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center">
             <img src="/flogo.svg" alt="Footylytics" className="h-10 w-auto" />
           </Link>
@@ -128,7 +258,7 @@ export default function Navbar({ onMenuClick }) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-96 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 overflow-hidden z-50"
+                    className="absolute right-0 mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 overflow-hidden z-50"
                   >
                     {/* Header */}
                     <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700">
@@ -220,6 +350,7 @@ export default function Navbar({ onMenuClick }) {
         </div>
       </div>
     </nav>
+    </>
   );
 }
 
