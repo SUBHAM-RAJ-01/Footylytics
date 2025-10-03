@@ -1,6 +1,16 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { FiSun, FiMoon, FiBell, FiMenu, FiZap, FiAward, FiX, FiCalendar, FiDownload } from "react-icons/fi";
+import {
+  FiSun,
+  FiMoon,
+  FiBell,
+  FiMenu,
+  FiZap,
+  FiAward,
+  FiX,
+  FiCalendar,
+  FiDownload,
+} from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
@@ -32,28 +42,28 @@ export default function Navbar({ onMenuClick }) {
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      
+
       // Show PWA prompt on mobile/tablet
       const isMobileOrTablet = window.innerWidth <= 1024;
       if (isMobileOrTablet) {
         setShowPWAPrompt(true);
-        
-        // Show popup notification once per 7 days
-        const lastShown = localStorage.getItem('pwaPopupLastShown');
+
+        // Show popup notification once per 10 minutes
+        const lastShown = localStorage.getItem("pwaPopupLastShown");
         const now = Date.now();
-        const sevenDays = 7 * 24 * 60 * 60 * 1000;
-        
-        if (!lastShown || now - parseInt(lastShown) > sevenDays) {
+        const tenMinutes = 10 * 60 * 1000;
+
+        if (!lastShown || now - parseInt(lastShown) > tenMinutes) {
           setTimeout(() => {
             setShowPWAPopup(true);
-            localStorage.setItem('pwaPopupLastShown', now.toString());
+            localStorage.setItem("pwaPopupLastShown", now.toString());
           }, 2000); // Show after 2 seconds
         }
       }
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   const handlePWAInstall = async () => {
@@ -61,12 +71,12 @@ export default function Navbar({ onMenuClick }) {
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
+
+    if (outcome === "accepted") {
       setShowPWAPrompt(false);
       setShowPWAPopup(false);
     }
-    
+
     setDeferredPrompt(null);
   };
 
@@ -80,13 +90,14 @@ export default function Navbar({ onMenuClick }) {
 
     if (showNotifications) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showNotifications]);
 
   const fetchNotifications = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const { data } = await axios.get(
@@ -117,9 +128,9 @@ export default function Navbar({ onMenuClick }) {
       await axios.post(`${import.meta.env.VITE_API_URL}/notifications/toggle`, {
         userId: user.id,
         matchId: matchId,
-        matchData: {}
+        matchData: {},
       });
-      setNotifications(notifications.filter(n => n.id !== notificationId));
+      setNotifications(notifications.filter((n) => n.id !== notificationId));
     } catch (error) {
       console.error("Failed to remove notification:", error);
     }
@@ -181,7 +192,8 @@ export default function Navbar({ onMenuClick }) {
                     Install Footylytics
                   </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    Get the app experience! Install now for quick access and offline support.
+                    Get the app experience! Install now for quick access and
+                    offline support.
                   </p>
                   <div className="flex items-center space-x-2">
                     <button
@@ -213,143 +225,151 @@ export default function Navbar({ onMenuClick }) {
       <nav className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center">
-            <img src="/flogo.svg" alt="Footylytics" className="h-10 w-auto" />
-          </Link>
+            <Link to="/" className="flex items-center">
+              <img src="/flogo.svg" alt="Footylytics" className="h-10 w-auto" />
+            </Link>
 
-          <div className="flex items-center space-x-4">
-            {/* Show upgrade button for non-premium users or guests */}
-            {!profile?.is_premium && (
-              <Link
-                to="/pricing"
-                className="hidden md:flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg font-medium hover:opacity-90 shadow-lg hover:shadow-xl transition-all"
-              >
-                <FiZap className="w-4 h-4" />
-                <span>Upgrade - ₹29/mo</span>
-              </Link>
-            )}
+            <div className="flex items-center space-x-4">
+              {/* Show upgrade button for non-premium users or guests */}
+              {!profile?.is_premium && (
+                <Link
+                  to="/pricing"
+                  className="hidden md:flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg font-medium hover:opacity-90 shadow-lg hover:shadow-xl transition-all"
+                >
+                  <FiZap className="w-4 h-4" />
+                  <span>Upgrade - ₹29/mo</span>
+                </Link>
+              )}
 
-            {/* Show premium badge for premium users */}
-            {profile?.is_premium && (
-              <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg font-medium">
-                <FiAward className="w-4 h-4" />
-                <span>Premium</span>
+              {/* Show premium badge for premium users */}
+              {profile?.is_premium && (
+                <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg font-medium">
+                  <FiAward className="w-4 h-4" />
+                  <span>Premium</span>
+                </div>
+              )}
+
+              {/* Notifications Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={handleNotificationClick}
+                  className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <FiBell className="w-5 h-5" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {notifications.length}
+                    </span>
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {showNotifications && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="fixed top-20 left-[5%] -translate-x-1/2 sm:absolute sm:top-auto sm:left-auto sm:translate-x-0 sm:right-0 sm:mt-2 w-[90vw] sm:w-96 max-w-md bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 overflow-hidden z-[100]"
+                    >
+                      {/* Header */}
+                      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700">
+                        <h3 className="font-semibold text-lg">
+                          Match Notifications
+                        </h3>
+                        <button
+                          onClick={() => setShowNotifications(false)}
+                          className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                        >
+                          <FiX className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      {/* Content */}
+                      <div className="max-h-96 overflow-y-auto">
+                        {loading ? (
+                          <div className="p-8 text-center">
+                            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                              Loading...
+                            </p>
+                          </div>
+                        ) : !user ? (
+                          <div className="p-8 text-center">
+                            <FiBell className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                            <p className="text-gray-600 dark:text-gray-400 mb-4">
+                              Sign in to view notifications
+                            </p>
+                            <Link
+                              to="/login"
+                              onClick={() => setShowNotifications(false)}
+                              className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                              Sign In
+                            </Link>
+                          </div>
+                        ) : notifications.length === 0 ? (
+                          <div className="p-8 text-center">
+                            <FiBell className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                            <p className="text-gray-600 dark:text-gray-400 mb-2">
+                              No match notifications
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-500">
+                              Click the bell icon on fixtures to get notified
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="divide-y divide-gray-200 dark:divide-slate-700">
+                            {notifications.map((notification) => (
+                              <NotificationItem
+                                key={notification.id}
+                                notification={notification}
+                                onRemove={handleRemoveNotification}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer */}
+                      {notifications.length > 0 && (
+                        <div className="p-3 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
+                          <Link
+                            to="/fixtures"
+                            onClick={() => setShowNotifications(false)}
+                            className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center justify-center space-x-1"
+                          >
+                            <FiCalendar className="w-4 h-4" />
+                            <span>View All Fixtures</span>
+                          </Link>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            )}
 
-            {/* Notifications Dropdown */}
-            <div className="relative" ref={dropdownRef}>
               <button
-                onClick={handleNotificationClick}
-                className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                onClick={toggleTheme}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
               >
-                <FiBell className="w-5 h-5" />
-                {notifications.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {notifications.length}
-                  </span>
+                {theme === "light" ? (
+                  <FiMoon className="w-5 h-5" />
+                ) : (
+                  <FiSun className="w-5 h-5" />
                 )}
               </button>
 
-              <AnimatePresence>
-                {showNotifications && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 overflow-hidden z-50"
-                  >
-                    {/* Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700">
-                      <h3 className="font-semibold text-lg">Match Notifications</h3>
-                      <button
-                        onClick={() => setShowNotifications(false)}
-                        className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                      >
-                        <FiX className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    {/* Content */}
-                    <div className="max-h-96 overflow-y-auto">
-                      {loading ? (
-                        <div className="p-8 text-center">
-                          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading...</p>
-                        </div>
-                      ) : !user ? (
-                        <div className="p-8 text-center">
-                          <FiBell className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                          <p className="text-gray-600 dark:text-gray-400 mb-4">Sign in to view notifications</p>
-                          <Link
-                            to="/login"
-                            onClick={() => setShowNotifications(false)}
-                            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Sign In
-                          </Link>
-                        </div>
-                      ) : notifications.length === 0 ? (
-                        <div className="p-8 text-center">
-                          <FiBell className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                          <p className="text-gray-600 dark:text-gray-400 mb-2">No match notifications</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-500">
-                            Click the bell icon on fixtures to get notified
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="divide-y divide-gray-200 dark:divide-slate-700">
-                          {notifications.map((notification) => (
-                            <NotificationItem
-                              key={notification.id}
-                              notification={notification}
-                              onRemove={handleRemoveNotification}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Footer */}
-                    {notifications.length > 0 && (
-                      <div className="p-3 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
-                        <Link
-                          to="/fixtures"
-                          onClick={() => setShowNotifications(false)}
-                          className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center justify-center space-x-1"
-                        >
-                          <FiCalendar className="w-4 h-4" />
-                          <span>View All Fixtures</span>
-                        </Link>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <button
+                onClick={onMenuClick}
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
+              >
+                <FiMenu className="w-6 h-6" />
+              </button>
             </div>
-
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
-            >
-              {theme === "light" ? (
-                <FiMoon className="w-5 h-5" />
-              ) : (
-                <FiSun className="w-5 h-5" />
-              )}
-            </button>
-
-            <button
-              onClick={onMenuClick}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
-            >
-              <FiMenu className="w-6 h-6" />
-            </button>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
     </>
   );
 }
@@ -358,7 +378,9 @@ export default function Navbar({ onMenuClick }) {
 function NotificationItem({ notification, onRemove }) {
   const matchData = notification.match_data;
   const matchDate = matchData.matchDate ? new Date(matchData.matchDate) : null;
-  const formattedDate = matchDate ? format(matchDate, "MMM dd, yyyy") : matchData.matchDate;
+  const formattedDate = matchDate
+    ? format(matchDate, "MMM dd, yyyy")
+    : matchData.matchDate;
 
   return (
     <div className="p-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">

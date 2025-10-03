@@ -5,6 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiClock, FiCalendar, FiBell, FiBellOff } from 'react-icons/fi';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { 
+  requestNotificationPermission, 
+  scheduleNotification, 
+  removeScheduledNotification,
+  calculateNotificationTime 
+} from '../utils/notifications';
 
 export default function MatchCard({ match }) {
   const [countdown, setCountdown] = useState('');
@@ -89,6 +95,7 @@ export default function MatchCard({ match }) {
     setNotifyLoading(true);
     try {
       const matchData = {
+        matchId: match.id.toString(),
         homeTeam: match.homeTeam?.name,
         awayTeam: match.awayTeam?.name,
         homeTeamCrest: match.homeTeam?.crest,
@@ -105,6 +112,27 @@ export default function MatchCard({ match }) {
       });
 
       setIsNotifying(data.subscribed);
+
+      // Handle push notifications for PWA
+      if (data.subscribed && matchDate) {
+        // Request permission if not already granted
+        const hasPermission = await requestNotificationPermission();
+        
+        if (hasPermission) {
+          // Calculate notification time (30 minutes before match)
+          const notifyTime = calculateNotificationTime(matchDate);
+          
+          // Schedule the notification
+          scheduleNotification(matchData, notifyTime);
+          
+          alert('✅ Notification set! You\'ll be notified 30 minutes before the match starts.');
+        } else {
+          alert('⚠️ Please enable notifications in your browser settings to receive match alerts.');
+        }
+      } else if (!data.subscribed) {
+        // Remove scheduled notification
+        removeScheduledNotification(match.id.toString());
+      }
     } catch (error) {
       console.error('Failed to toggle notification:', error);
       alert('Failed to update notification. Please try again.');
@@ -130,7 +158,7 @@ export default function MatchCard({ match }) {
           {match.competition?.name || 'Football'}
         </span>
         <div className="flex items-center space-x-2">
-          {isScheduled && user && (
+          {isScheduled && (
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -141,7 +169,7 @@ export default function MatchCard({ match }) {
                   ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                   : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
               }`}
-              title={isNotifying ? 'Notification enabled' : 'Get notified before match'}
+              title={user ? (isNotifying ? 'Notification enabled' : 'Get notified before match') : 'Sign in to enable notifications'}
             >
               {notifyLoading ? (
                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>

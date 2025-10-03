@@ -50,6 +50,9 @@ export default function Footer() {
             <Link to="/terms" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-emerald-400">
               Terms
             </Link>
+            <Link to="/developer" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-emerald-400">
+              Developer
+            </Link>
           </div>
         </div>
       </div>
@@ -164,6 +167,9 @@ export default function Footer() {
               </Link>
               <Link to="/terms" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-emerald-400">
                 Terms of Service
+              </Link>
+              <Link to="/developer" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-emerald-400">
+                Developer
               </Link>
             </div>
           </div>

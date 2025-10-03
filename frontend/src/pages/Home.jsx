@@ -18,6 +18,7 @@ export default function Home() {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState('live'); // 'live' or 'recent'
 
   useEffect(() => {
     fetchTodayMatches();
@@ -28,8 +29,28 @@ export default function Home() {
   const fetchTodayMatches = async (manual = false) => {
     if (manual) setRefreshing(true);
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/matches/live`);
-      setMatches(data.matches || []);
+      // Fetch matches from multiple top leagues
+      const leagueIds = ['2021', '2014', '2001', '2002', '2019', '2015']; // PL, LaLiga, UCL, Bundesliga, Serie A, Ligue 1
+      const promises = leagueIds.map(id => 
+        axios.get(`${import.meta.env.VITE_API_URL}/matches/fixtures/${id}`)
+          .catch(() => ({ data: { matches: [] } }))
+      );
+      
+      const results = await Promise.all(promises);
+      const allMatches = results.flatMap(r => r.data.matches || []);
+      
+      // Filter to get only today's and recent matches
+      const now = new Date();
+      const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      
+      const relevantMatches = allMatches.filter(match => {
+        if (!match.utcDate) return false;
+        const matchDate = new Date(match.utcDate);
+        return matchDate >= twoDaysAgo && matchDate <= tomorrow;
+      });
+      
+      setMatches(relevantMatches);
     } catch (error) {
       console.error('Failed to fetch matches:', error);
       setMatches([]);
@@ -37,6 +58,19 @@ export default function Home() {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  // Count matches for today only (till 12 AM)
+  const getTodayMatchCount = () => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    
+    return matches.filter(match => {
+      if (!match.utcDate) return false;
+      const matchDate = new Date(match.utcDate);
+      return matchDate >= todayStart && matchDate <= todayEnd;
+    }).length;
   };
 
   // Mock data for demo when no real matches
@@ -152,15 +186,13 @@ export default function Home() {
   const liveMatches = matches.filter(m => m.status === 'IN_PLAY' || m.status === 'PAUSED');
   const upcomingMatches = matches.filter(m => m.status === 'SCHEDULED' || m.status === 'TIMED');
   
-  // Recent matches (finished in last 24 hours)
+  // Recent matches (finished in last 2 days)
   const recentMatches = matches.filter(m => {
     if (m.status !== 'FINISHED' || !m.utcDate) return false;
     const matchDate = new Date(m.utcDate);
     const hoursSince = (new Date() - matchDate) / (1000 * 60 * 60);
-    return hoursSince <= 24;
-  });
-  
-  const finishedMatches = matches.filter(m => m.status === 'FINISHED');
+    return hoursSince <= 48; // Last 2 days
+  }).sort((a, b) => new Date(b.utcDate) - new Date(a.utcDate));
 
   return (
     <div className="space-y-8">
@@ -176,7 +208,7 @@ export default function Home() {
         </p>
         <div className="mt-4 flex items-center space-x-4">
           <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-            <span className="text-2xl font-bold">{matches.length}</span>
+            <span className="text-2xl font-bold">{getTodayMatchCount()}</span>
             <span className="text-sm ml-2">Matches Today</span>
           </div>
           {liveMatches.length > 0 && (
@@ -205,82 +237,129 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Live Matches */}
-      {liveMatches.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold flex items-center space-x-2">
-              <span className="w-3 h-3 bg-red-500 rounded-full live-pulse"></span>
-              <span>Live Matches</span>
-            </h2>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {liveMatches.map(match => (
-              <MatchCard key={match.id} match={match} />
-            ))}
-          </div>
+      {/* Live/Recent Toggle */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2 bg-gray-100 dark:bg-slate-800 rounded-lg p-1">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setViewMode('live')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center space-x-2 ${
+              viewMode === 'live'
+                ? 'bg-white dark:bg-slate-700 shadow-md'
+                : 'text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            {liveMatches.length > 0 && (
+              <span className="w-2 h-2 bg-red-500 rounded-full live-pulse"></span>
+            )}
+            <span>Live & Upcoming</span>
+            {liveMatches.length > 0 && (
+              <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                {liveMatches.length}
+              </span>
+            )}
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setViewMode('recent')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              viewMode === 'recent'
+                ? 'bg-white dark:bg-slate-700 shadow-md'
+                : 'text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            Recent Results
+          </motion.button>
         </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => fetchTodayMatches(true)}
+          disabled={refreshing}
+          className="flex items-center space-x-1 px-3 py-2 md:px-4 md:py-2 bg-blue-600 dark:bg-emerald-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50 text-sm"
+        >
+          <FiRefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Refresh</span>
+        </motion.button>
+      </div>
+
+      {/* Live & Upcoming View */}
+      {viewMode === 'live' && (
+        <>
+          {/* Live Matches */}
+          {liveMatches.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold flex items-center space-x-2">
+                  <span className="w-3 h-3 bg-red-500 rounded-full live-pulse"></span>
+                  <span>Live Matches</span>
+                </h2>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {liveMatches.map(match => (
+                  <MatchCard key={match.id} match={match} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Upcoming Matches */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold">Upcoming Matches</h2>
+            </div>
+            
+            {loading ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div key={i} className="bg-gray-200 dark:bg-slate-800 rounded-xl h-48 animate-pulse"></div>
+                ))}
+              </div>
+            ) : upcomingMatches.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {upcomingMatches.map(match => (
+                  <MatchCard key={match.id} match={match} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-gray-50 dark:bg-slate-800 rounded-xl">
+                <p className="text-gray-500 dark:text-gray-400">No upcoming matches</p>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
-      {/* Recent Results (Last 24 hours) */}
-      {recentMatches.length > 0 && (
+      {/* Recent Results View */}
+      {viewMode === 'recent' && (
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold flex items-center space-x-2">
               <span>Recent Results</span>
-              <span className="text-sm font-normal text-gray-500 dark:text-gray-400">(Last 24 hours)</span>
+              <span className="text-sm font-normal text-gray-500 dark:text-gray-400">(Last 2 days)</span>
             </h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {recentMatches.map(match => (
-              <MatchCard key={match.id} match={match} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Upcoming Matches */}
-      {upcomingMatches.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold">Upcoming Matches</h2>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => fetchTodayMatches(true)}
-              disabled={refreshing}
-              className="flex items-center space-x-1 px-3 py-2 md:px-4 md:py-2 bg-blue-600 dark:bg-emerald-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50 text-sm"
-            >
-              <FiRefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
-            </motion.button>
-          </div>
-          
           {loading ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3, 4, 5, 6].map(i => (
                 <div key={i} className="bg-gray-200 dark:bg-slate-800 rounded-xl h-48 animate-pulse"></div>
               ))}
             </div>
-          ) : (
+          ) : recentMatches.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {upcomingMatches.map(match => (
+              {recentMatches.map(match => (
                 <MatchCard key={match.id} match={match} />
               ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-gray-50 dark:bg-slate-800 rounded-xl">
+              <p className="text-gray-500 dark:text-gray-400">No recent results</p>
             </div>
           )}
         </div>
       )}
 
-      {/* No Matches */}
-      {!loading && matches.length === 0 && liveMatches.length === 0 && upcomingMatches.length === 0 && recentMatches.length === 0 && (
-        <div className="text-center py-12 bg-gray-50 dark:bg-slate-800 rounded-xl">
-          <p className="text-gray-500 dark:text-gray-400 text-lg">No matches available</p>
-          <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
-            Check back later for live scores and fixtures
-          </p>
-        </div>
-      )}
+
     </div>
   );
 }

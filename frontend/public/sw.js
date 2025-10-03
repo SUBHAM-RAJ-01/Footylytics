@@ -1,4 +1,4 @@
-// Simple service worker for PWA
+// Service worker for PWA with Push Notifications
 const CACHE_NAME = 'footylytics-v1';
 
 self.addEventListener('install', (event) => {
@@ -19,4 +19,21 @@ self.addEventListener('fetch', (event) => {
       return response || fetch(event.request);
     })
   );
+});
+
+// Handle notification click
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'view' || !event.action) {
+    // Open the app
+    event.waitUntil(
+      clients.openWindow(event.notification.data?.url || '/live-scores')
+    );
+  }
+});
+
+// Handle notification close
+self.addEventListener('notificationclose', (event) => {
+  console.log('Notification closed:', event.notification.tag);
 });

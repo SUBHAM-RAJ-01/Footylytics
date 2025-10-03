@@ -12,60 +12,60 @@ router.get('/live', async (req, res) => {
     res.json(data);
   } catch (error) {
     logger.error('Live scores error:', error);
-    
-    // Return mock data if API fails
-    const { mockMatches } = await import('../services/mockData.js');
-    logger.warn('Returning mock data due to API error');
-    res.json(mockMatches);
+    res.status(500).json({ 
+      error: 'Failed to fetch live scores',
+      message: error.message,
+      matches: []
+    });
   }
 });
 
 router.get('/fixtures/:leagueId', async (req, res) => {
   try {
+    logger.info(`Fetching fixtures for league ${req.params.leagueId}...`);
     const data = await sportsdb.getUpcomingFixtures(req.params.leagueId);
     res.json(data);
   } catch (error) {
     logger.error('Fixtures error:', error);
     res.status(500).json({ 
       error: 'Failed to fetch fixtures',
-      message: error.message 
+      message: error.message,
+      matches: []
     });
   }
 });
 
-// Test endpoint to verify API connection
+// Test endpoint to verify API-Football connection
 router.get('/test', async (req, res) => {
   try {
     const axios = (await import('axios')).default;
-    const apiKey = process.env.FOOTBALL_API_KEY;
+    const apiKey = process.env.RAPIDAPI_KEY;
+    const apiHost = process.env.RAPIDAPI_HOST || 'api-football-v1.p.rapidapi.com';
     
-    if (!apiKey || apiKey === 'your_football_data_api_key') {
+    if (!apiKey) {
       return res.status(400).json({
         success: false,
-        error: 'API key not configured',
-        message: 'Get free key from: https://www.football-data.org/client/register'
+        error: 'RapidAPI key not configured',
+        message: 'Set RAPIDAPI_KEY in .env file'
       });
     }
 
-    const testUrl = 'https://api.football-data.org/v4/competitions';
-    logger.info(`Testing API: ${testUrl}`);
+    const testUrl = `https://${apiHost}/v3/timezone`;
+    logger.info(`Testing API-Football: ${testUrl}`);
     
     const response = await axios.get(testUrl, {
       headers: {
-        'X-Auth-Token': apiKey
+        'X-RapidAPI-Key': apiKey,
+        'X-RapidAPI-Host': apiHost
       }
     });
     
     res.json({ 
       success: true,
-      message: 'API connection successful!',
+      message: 'API-Football connection successful!',
       apiKeyLength: apiKey.length,
-      competitionsCount: response.data.competitions?.length || 0,
-      sample: response.data.competitions?.slice(0, 3).map(c => ({
-        id: c.id,
-        name: c.name,
-        area: c.area.name
-      }))
+      timezonesCount: response.data.response?.length || 0,
+      sampleTimezones: response.data.response?.slice(0, 5)
     });
   } catch (error) {
     logger.error('API test error:', error.response?.data || error.message);

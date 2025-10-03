@@ -24,8 +24,8 @@ export const sendEmail = async (to, subject, htmlContent) => {
 
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'Footylytics <onboarding@resend.dev>',
-      to,
+      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+      to: Array.isArray(to) ? to : [to],
       subject,
       html: htmlContent,
     });

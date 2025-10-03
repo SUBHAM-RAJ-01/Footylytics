@@ -218,27 +218,7 @@ export default function Fixtures() {
         </div>
       ) : (
         <>
-          {/* Recent Results Section */}
-          {recentResults.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold flex items-center space-x-2">
-                  <span>Recent Results</span>
-                  <span className="text-sm font-normal text-gray-500 dark:text-gray-400">(Last 5 days)</span>
-                </h2>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {recentResults.length} match{recentResults.length !== 1 ? 'es' : ''}
-                </span>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {recentResults.map(match => (
-                  <MatchCard key={match.id} match={match} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Upcoming Fixtures Section */}
+          {/* Upcoming Fixtures Section - SHOW FIRST */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">Upcoming Fixtures</h2>
@@ -261,6 +241,26 @@ export default function Fixtures() {
               </div>
             )}
           </div>
+
+          {/* Recent Results Section - SHOW AFTER */}
+          {recentResults.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold flex items-center space-x-2">
+                  <span>Recent Results</span>
+                  <span className="text-sm font-normal text-gray-500 dark:text-gray-400">(Last 5 days)</span>
+                </h2>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {recentResults.length} match{recentResults.length !== 1 ? 'es' : ''}
+                </span>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {recentResults.map(match => (
+                  <MatchCard key={match.id} match={match} />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* No Results Message */}
           {recentResults.length === 0 && upcomingFixtures.length === 0 && (
