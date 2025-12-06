@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug - Footylytics</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .debug-section {
+        background: white;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 8px;
+        border-left: 4px solid #2563eb;
+      }
+      .error {
+        border-left-color: #dc2626;
+      }
+      .success {
+        border-left-color: #059669;
+      }
+      .warning {
+        border-left-color: #d97706;
+      }
+      pre {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+        font-size: 12px;
+      }
+      .button {
+        background: #2563eb;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 Footylytics Debug Information</h1>
+
+    <div class="debug-section">
+      <h3>Environment Check</h3>
+      <div id="env-check">Checking...</div>
+    </div>
+
+    <div class="debug-section">
+      <h3>Network Tests</h3>
+      <div id="network-tests">Testing...</div>
+    </div>
+
+    <div class="debug-section">
+      <h3>Browser Support</h3>
+      <div id="browser-support">Checking...</div>
+    </div>
+
+    <div class="debug-section">
+      <h3>Console Errors</h3>
+      <div id="console-errors">Monitoring...</div>
+    </div>
+
+    <div class="debug-section">
+      <h3>Actions</h3>
+      <button class="button" onclick="testMainApp()">Test Main App</button>
+      <button class="button" onclick="clearEverything()">
+        Clear Everything
+      </button>
+      <button class="button" onclick="window.location.href='/'">
+        Go to App
+      </button>
+    </div>
+
+    <script>
+      // Capture console errors
+      const errors = [];
+      const originalError = console.error;
+      console.error = function(...args) {
+          errors.push(args.join(' '));
+          originalError.apply(console, arguments);
+          updateErrorDisplay();
+      };
+
+      function updateErrorDisplay() {
+          document.getElementById('console-errors').innerHTML =
+              errors.length > 0
+                  ? '<pre>' + errors.join('\n') + '</pre>'
+                  : '✅ No errors detected';
+      }
+
+      // Environment check
+      function checkEnvironment() {
+          const envDiv = document.getElementById('env-check');
+          let html = '';
+
+          // Check if we're in production
+          const isProduction = window.location.hostname !== 'localhost';
+          html += `<p><strong>Environment:</strong> ${isProduction ? 'Production' : 'Development'}</p>`;
+          html += `<p><strong>URL:</strong> ${window.location.href}</p>`;
+          html += `<p><strong>User Agent:</strong> ${navigator.userAgent}</p>`;
+
+          // Check for required APIs
+          const checks = [
+              { name: 'Service Worker', supported: 'serviceWorker' in navigator },
+              { name: 'Fetch API', supported: 'fetch' in window },
+              { name: 'ES6 Modules', supported: 'noModule' in HTMLScriptElement.prototype },
+              { name: 'Local Storage', supported: 'localStorage' in window },
+          ];
+
+          html += '<h4>Browser Support:</h4>';
+          checks.forEach(check => {
+              html += `<p>• ${check.name}: ${check.supported ? '✅' : '❌'}</p>`;
+          });
+
+          envDiv.innerHTML = html;
+      }
+
+      // Network tests
+      async function testNetwork() {
+          const networkDiv = document.getElementById('network-tests');
+          let html = '<h4>Testing connections...</h4>';
+
+          // Test main app assets
+          const tests = [
+              { name: 'Main JS Bundle', url: '/assets/index-BUTYu3rn.js' },
+              { name: 'Main CSS', url: '/assets/index-B3FXuNfT.css' },
+              { name: 'Manifest', url: '/manifest.json' },
+              { name: 'Service Worker', url: '/sw.js' }
+          ];
+
+          for (const test of tests) {
+              try {
+                  const response = await fetch(test.url);
+                  const status = response.ok ? '✅' : '❌';
+                  html += `<p>• ${test.name}: ${status} (${response.status})</p>`;
+              } catch (error) {
+                  html += `<p>• ${test.name}: ❌ (${error.message})</p>`;
+              }
+          }
+
+          networkDiv.innerHTML = html;
+      }
+
+      // Test main app loading
+      function testMainApp() {
+          console.log('Testing main app...');
+
+          // Try to load the main module
+          import('/src/main.jsx')
+              .then(() => {
+                  console.log('✅ Main module loaded successfully');
+                  alert('Main module loaded successfully! The issue might be elsewhere.');
+              })
+              .catch(error => {
+                  console.error('❌ Failed to load main module:', error);
+                  alert('Failed to load main module: ' + error.message);
+              });
+      }
+
+      // Clear everything
+      async function clearEverything() {
+          try {
+              // Clear service workers
+              if ('serviceWorker' in navigator) {
+                  const registrations = await navigator.serviceWorker.getRegistrations();
+                  for (let registration of registrations) {
+                      await registration.unregister();
+                  }
+              }
+
+              // Clear caches
+              if ('caches' in window) {
+                  const cacheNames = await caches.keys();
+                  for (let cacheName of cacheNames) {
+                      await caches.delete(cacheName);
+                  }
+              }
+
+              // Clear storage
+              localStorage.clear();
+              sessionStorage.clear();
+
+              alert('Everything cleared! Redirecting to app...');
+              setTimeout(() => window.location.href = '/', 1000);
+
+          } catch (error) {
+              alert('Error clearing: ' + error.message);
+          }
+      }
+
+      // Initialize
+      checkEnvironment();
+      testNetwork();
+      updateErrorDisplay();
+
+      // Update browser support
+      document.getElementById('browser-support').innerHTML = `
+          <p><strong>JavaScript:</strong> ${typeof Symbol !== 'undefined' ? '✅ ES6+' : '❌ Legacy'}</p>
+          <p><strong>Modules:</strong> ${typeof import !== 'undefined' ? '✅ Supported' : '❌ Not supported'}</p>
+          <p><strong>Async/Await:</strong> ${typeof (async () => {}) === 'function' ? '✅ Supported' : '❌ Not supported'}</p>
+      `;
+    </script>
+  </body>
+</html>
